@@ -2,6 +2,7 @@
   "name": "barcode-try",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://paolomastinu.github.io/barcode_web",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
