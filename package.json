@@ -18,7 +18,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy": "gh-pages -d build"
+    "deploy": "GIT_SSH_COMMAND='ssh -i ~/.ssh/my_personal_key -o IdentitiesOnly=yes' gh-pages -d build -r git@github.com:paolomastinu/barcode_web.git"
   },
   "eslintConfig": {
     "extends": [
