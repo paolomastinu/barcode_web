@@ -4,11 +4,16 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 export default function BarcodeScanner() {
   const videoRef = useRef(null);
   const [result, setResult] = useState("");
-  const [reader] = useState(() => new BrowserMultiFormatReader());
+  const readerRef = useRef(null);
 
   useEffect(() => {
-    return () => reader.reset(); // cleanup
-  }, [reader]);
+    readerRef.current = new BrowserMultiFormatReader();
+
+    return () => {
+      // Cleanup quando il componente viene smontato
+      stop();
+    };
+  }, []);
 
   const start = async () => {
     try {
@@ -20,12 +25,25 @@ export default function BarcodeScanner() {
         },
         audio: false,
       });
-      videoRef.current.srcObject = stream;
-      await videoRef.current.play();
 
-      reader.decodeFromVideoDevice(null, videoRef.current, (res) => {
-        if (res) setResult(res.getText());
-      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+
+        // Usa decodeFromVideoDevice correttamente
+        readerRef.current.decodeFromVideoDevice(
+          undefined, // deviceId (undefined = default)
+          videoRef.current,
+          (res, err) => {
+            if (res) {
+              setResult(res.getText());
+            }
+            if (err && !(err.name === "NotFoundException")) {
+              console.error(err);
+            }
+          }
+        );
+      }
     } catch (e) {
       alert("Impossibile accedere alla fotocamera: " + e.message);
       console.error(e);
@@ -33,10 +51,25 @@ export default function BarcodeScanner() {
   };
 
   const stop = () => {
-    reader.reset();
+    // Ferma lo stream video
     const stream = videoRef.current?.srcObject;
-    stream?.getTracks().forEach((t) => t.stop());
-    if (videoRef.current) videoRef.current.srcObject = null;
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+
+    // Pulisci il video element
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
+    // Resetta il reader (se esiste il metodo)
+    if (readerRef.current) {
+      try {
+        readerRef.current.stopContinuousDecode?.();
+      } catch (e) {
+        console.warn("Errore durante lo stop del reader:", e);
+      }
+    }
   };
 
   return (
